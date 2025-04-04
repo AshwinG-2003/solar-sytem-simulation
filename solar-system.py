@@ -3,10 +3,10 @@ import numpy as np
 import random
 from scipy.integrate import ode
 
-# Initialize Pygame
+# initialize Pygame
 pygame.init()
 
-# Set window dimensions
+# set window dimensions
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Solar System Simulation")
@@ -23,12 +23,12 @@ URANUS_COLOR = (173, 216, 230)
 NEPTUNE_COLOR = (0, 0, 255)
 SUN_COLOR = (255, 255, 0)
 
-# Gravitational constant
+# gravitational constant
 G = 6.67428e-11  
-# One day per step
+# one day per step
 TIMESTEP = 60 * 60 * 24
 
-# Define an AU (astronomical unit) in meters
+# define an AU (astronomical unit) in meters
 AU = 149.6e6 * 1000
 
 class HeavenlyBody:
@@ -53,7 +53,7 @@ class HeavenlyBody:
         text = font.render(self.name, True, (255, 255, 255))
         screen.blit(text, (x_screen - 15, y_screen + self.radius + 5))
 
-# Function defining the ODE system
+# function defining the ODE system
 def ode_system(t, state, bodies):
     num_bodies = len(bodies)
     dydt = np.zeros_like(state)
@@ -75,9 +75,14 @@ def ode_system(t, state, bodies):
             if distance == 0:
                 continue
 
-            force = G * bodies[j].mass / distance**2
-            ax += force * dx / distance
-            ay += force * dy / distance
+            # gravitational force equation: F = G * m1 * m2 / r^2
+            m1 = bodies[i].mass
+            m2 = bodies[j].mass  
+            force = G * m1 * m2 / distance**2
+
+            # acceleration due to the force: a = F / m
+            ax += force * dx / (m1 * distance)  
+            ay += force * dy / (m1 * distance)
 
         dydt[index] = vx
         dydt[index+1] = vy
@@ -85,6 +90,7 @@ def ode_system(t, state, bodies):
         dydt[index+3] = ay
 
     return dydt
+
 
 def add_random_body(planetBodies, solver):
     x = random.uniform(-20, 20) * AU
@@ -111,7 +117,7 @@ def add_random_body(planetBodies, solver):
     solver.set_initial_value(np.append(solver.y, new_state), solver.t)
     solver.set_f_params(planetBodies)
 
-# Main function to run the simulation
+# main function to run the simulation
 def main():
     global G, TIMESTEP
 
@@ -213,12 +219,12 @@ def main():
                     elif event.key == pygame.K_ESCAPE:
                         run = False
 
-        # Solve ODE for the next time step
+        # solve ODE for the next time step
         if solver.successful():
             solver.integrate(solver.t + TIMESTEP)
             state = solver.y
 
-            # Update planet positions
+            # update planet positions
             for i, body in enumerate(planetBodies):
                 index = i * 4
                 body.x = state[index]
